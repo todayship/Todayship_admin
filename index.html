@@ -2,14 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TODAYSHIP Admin Panel</title>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,31 +11,27 @@
       margin: 0;
       padding: 0;
     }
-
     header {
       background-color: #1088e5;
       color: white;
       padding: 20px;
       text-align: center;
     }
-
     nav {
       background-color: #1565c0;
       padding: 10px;
       text-align: center;
     }
-
     nav a {
       color: white;
       text-decoration: none;
       margin: 0 15px;
       font-weight: bold;
+      cursor: pointer;
     }
-
     main {
       padding: 20px;
     }
-
     .card {
       background-color: white;
       padding: 20px;
@@ -57,21 +47,39 @@
   </header>
 
   <nav>
-    <a href="#">Dashboard</a>
-    <a href="#">Orders</a>
-    <a href="#">Products</a>
-    <a href="#">Users</a>
+    <a onclick="showPage('dashboard')">Dashboard</a>
+    <a onclick="showPage('orders')">Orders</a>
+    <a onclick="showPage('products')">Products</a>
+    <a onclick="showPage('users')">Users</a>
   </nav>
 
   <main>
-    <div class="card">
+    <div class="card" id="dashboard">
       <h2>Welcome Admin</h2>
       <p>Use the panel above to manage the eCommerce system.</p>
     </div>
+
+    <div class="card" id="orders" style="display:none;">
+      <h2>Orders</h2>
+      <div id="ordersList">Loading orders...</div>
+    </div>
+
+    <div class="card" id="products" style="display:none;">
+      <h2>Products</h2>
+      <div id="productsList">Loading products...</div>
+    </div>
+
+    <div class="card" id="users" style="display:none;">
+      <h2>Users</h2>
+      <div id="usersList">Loading users...</div>
+    </div>
   </main>
 
-  <!-- Firebase Config and Initialization -->
-  <script>
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyCUme4r81DwKiTsCaMQFNPcDuoj0xw8peI",
       authDomain: "todayship-admin.firebaseapp.com",
@@ -81,8 +89,50 @@
       appId: "1:644604140353:web:71bcbfdad9cf0063191fc0"
     };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadOrders() {
+      const snapshot = await getDocs(collection(db, "orders"));
+      let html = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        html += `<p><strong>${data.customerName || "Unknown"}</strong> - ₹${data.total || 0}</p>`;
+      });
+      document.getElementById("ordersList").innerHTML = html;
+    }
+
+    async function loadProducts() {
+      const snapshot = await getDocs(collection(db, "products"));
+      let html = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        html += `<p><strong>${data.name || "Unnamed Product"}</strong> - ₹${data.price || 0}</p>`;
+      });
+      document.getElementById("productsList").innerHTML = html;
+    }
+
+    async function loadUsers() {
+      const snapshot = await getDocs(collection(db, "users"));
+      let html = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        html += `<p><strong>${data.name || "User"}</strong> (${data.email || "no-email"})</p>`;
+      });
+      document.getElementById("usersList").innerHTML = html;
+    }
+
+    // Initial load
+    window.onload = () => {
+      loadOrders();
+      loadProducts();
+      loadUsers();
+    };
+
+    window.showPage = function(page) {
+      document.querySelectorAll('.card').forEach(el => el.style.display = 'none');
+      document.getElementById(page).style.display = 'block';
+    };
   </script>
 </body>
 </html>
